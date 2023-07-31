@@ -35,9 +35,9 @@ async def authenticate():
 
     return reddit
 
-async def get_question():
+async def get_question(reddit):
 
-    reddit = await authenticate()
+    # reddit = await authenticate()
 
     # get a random askreddit question
     # exclude nsfw questions

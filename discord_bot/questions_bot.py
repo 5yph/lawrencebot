@@ -1,8 +1,7 @@
 import discord
 import q_generator as questions
 import db
-import json
-import requests
+import askreddit
 
 client = discord.Client()
 asking = False # is the bot asking a question and waiting for response?
@@ -10,6 +9,10 @@ asking = False # is the bot asking a question and waiting for response?
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
+
+    # start up reddit session
+    global reddit
+    reddit = await askreddit.authenticate()
 
 @client.event
 async def on_message(message):
@@ -28,7 +31,7 @@ async def on_message(message):
         while True:
             # ask question
             print('Getting question...')
-            q, cat, time = await questions.get_question('askreddit') # set to askreddit for now
+            q, cat, time = await questions.get_question(reddit, 'askreddit') # set to askreddit for now
             print('Got question, sending...')
             await message.channel.send("Category: " + cat)
             await message.channel.send("Time posted: " + time)      
@@ -70,6 +73,7 @@ async def on_message(message):
     # shut down the bot clientside
     if message.content.startswith('!shutdown'):
         await message.channel.send('Shutting down bot...')
+        await reddit.close()
         await client.close()
         print("Successfully closed, exiting...")
 

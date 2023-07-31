@@ -8,7 +8,7 @@ path_to_misc = "../questions/misc_personal.txt"
 # which categories of questions we have for now (constantly updated)
 categories = ['misc_personal', 'askreddit']
 
-async def generate(category):
+async def generate(category, reddit_session):
     
     # if miscellaneous personal questions, ask a random line in the file
     if category == 'misc_personal':
@@ -24,7 +24,7 @@ async def generate(category):
         f.close()
     elif category == 'askreddit':
         # get askreddit question
-        question, time = await askreddit.get_question()
+        question, time = await askreddit.get_question(reddit_session)
 
     return question, category, time
 
@@ -32,12 +32,12 @@ async def generate(category):
 Generates a random question to ask.
 In future, add categories of question
 """
-async def get_question(category='Any'):
+async def get_question(reddit_session, category='Any'):
     
     if category == 'Any':
         num = random.randrange(0, len(categories))
         category = categories[num]
     else:
-        question, cat, time = await generate(category)
+        question, cat, time = await generate(category, reddit_session)
     
     return question, cat, time
