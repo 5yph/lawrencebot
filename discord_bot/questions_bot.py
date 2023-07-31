@@ -65,6 +65,12 @@ async def on_message(message):
     elif not asking and message.content.startswith('!'):
         await message.channel.send('Invalid command')
 
+    # shut down the bot clientside
+    if message.content.startswith('!shutdown'):
+        await message.channel.send('Shutting down bot...')
+        await client.close()
+        print("Successfully closed, exiting...")
+
 f = open('TOKEN.txt', 'r')
 token = f.read()
 f.close()
