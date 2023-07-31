@@ -28,8 +28,10 @@ async def on_message(message):
         while True:
             # ask question
             print('Getting question...')
-            q, cat = questions.get_question()
+            q, cat, time = await questions.get_question('askreddit') # set to askreddit for now
             print('Got question, sending...')
+            await message.channel.send("Category: " + cat)
+            await message.channel.send("Time posted: " + time)      
             await message.channel.send(q)    
         
             # wait for reply
