@@ -29,7 +29,7 @@ def send_to_database(q, a, cat):
                             password=db['password'])
     
     cur = conn.cursor()
-    query = "INSERT INTO " + cat + " (question, answer) VALUES (%s, %s)"  
+    query = "INSERT INTO questions" + cat + " (question, answer) VALUES (%s, %s)"  
     
     cur.execute(query, (q,a))
     
