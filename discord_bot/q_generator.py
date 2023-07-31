@@ -5,7 +5,7 @@ import random
 path_to_misc = "../questions/misc_personal.txt"
 
 # which categories of questions we have for now (constantly updated)
-categories = ['misc_personal']
+categories = ['misc_personal', 'askreddit']
 
 def generate(category):
     
@@ -21,6 +21,10 @@ def generate(category):
         
         f.close()
     
+    if category == 'askreddit':
+        # get askreddit question
+        pass
+
     return question, category
 
 """
