@@ -1,38 +1,40 @@
 import discord
-import q_generator as questions
 import db
-import json
-import requests
+from discord.ext import commands
+import q_generator as questions
+import askreddit
 
-client = discord.Client()
+# set intents and commands
+intents = discord.Intents.default()
+intents.messages = True
+bot = commands.Bot(command_prefix='!', intents=intents)
+
 asking = False # is the bot asking a question and waiting for response?
 
-@client.event
+@bot.event
 async def on_ready():
-    print('We have logged in as {0.user}'.format(client))
+    print('We have logged in as {0.user}'.format(bot))
 
-@client.event
-async def on_message(message):
+    # start up reddit session
+    global reddit
+    reddit = await askreddit.authenticate()
+
+@bot.command()
+async def ask(ctx):
     global asking
 
-    print(asking)
-    print(message.content)
-
-    if message.author == client.user:
-        return
-
-    if message.content.startswith('!ask') and not asking:
+    if not asking:
         asking = True
 
         # keep asking until reply given
         while True:
             # ask question
             print('Getting question...')
-            q, cat, time = await questions.get_question('askreddit') # set to askreddit for now
+            q, cat, time = await questions.get_question(reddit, 'askreddit') # set to askreddit for now
             print('Got question, sending...')
-            await message.channel.send("Category: " + cat)
-            await message.channel.send("Time posted: " + time)      
-            await message.channel.send(q)    
+            await ctx.send("Category: " + cat)
+            await ctx.send("Time posted: " + time)      
+            await ctx.send(q)    
         
             # wait for reply
             # user needs to end their answer with a '$' to be considered a reply
@@ -41,40 +43,36 @@ async def on_message(message):
                 msg = m.content
                 return msg[-1] == '$' or msg == '!skip'
             
-            msg = await client.wait_for('message', check=check)
+            msg = await bot.wait_for('message', check=check)
             
             if msg.content == '!skip':
-                await message.channel.send('Getting new question...')
+                await ctx.send('Getting new question...')
                 # ask another question (restarts loop)
             else:
-                await message.channel.send('Reply received: {}'.format(msg.content[:-1]))
+                await ctx.send('Reply received: {}'.format(msg.content[:-1]))
                 
                 # store answer
                 answer = msg.content[:-1]
                 
                 try: 
                     db.send_to_database(q, answer, cat)
-                    await message.channel.send('Answer successfully stored in database!')
+                    await ctx.send('Answer successfully stored in database!')
                 except:
-                    await message.channel.send('Failed to store answer in database!')
+                    await ctx.send('Failed to store answer in database!')
                 
                 # end question asking
                 asking = False
                 break
 
-    elif message.content == '!skip' and not asking:
-        await message.channel.send('No message to skip')
-    elif not asking and message.content.startswith('!'):
-        await message.channel.send('Invalid command')
-
-    # shut down the bot clientside
-    if message.content.startswith('!shutdown'):
-        await message.channel.send('Shutting down bot...')
-        await client.close()
-        print("Successfully closed, exiting...")
+@bot.command()
+async def shutdown(ctx):
+    await ctx.send('Shutting down bot...')
+    await reddit.close()
+    await bot.close()
+    print("Successfully closed, exiting...")
 
 f = open('TOKEN.txt', 'r')
 token = f.read()
 f.close()
 
-client.run(token)
+bot.run(token)
